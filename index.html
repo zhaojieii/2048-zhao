@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2048 - 流畅版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5e6e8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #5a427d;
+            background-image: radial-gradient(circle at top right, #ffd6e0, #e7c6ff);
+            overflow: hidden;
+            transition: background-image 1s ease;
+        }
+
+        .bg-level-1 {
+            background-image: radial-gradient(circle at top right, #ffd6e0, #e7c6ff);
+        }
+
+        .bg-level-2 {
+            background-image: radial-gradient(circle at top right, #ffc2d1, #d0bdff);
+        }
+
+        .bg-level-3 {
+            background-image: radial-gradient(circle at top right, #ffafcc, #bde0fe);
+        }
+
+        .bg-level-4 {
+            background-image: radial-gradient(circle at top right, #ff9eb1, #a2d2ff);
+        }
+
+        .bg-level-5 {
+            background-image: radial-gradient(circle at top right, #ff8fa3, #9381ff);
+        }
+
+        .bg-level-6 {
+            background-image: radial-gradient(circle at top right, #ff758c, #8479e1);
+        }
+
+        .bg-level-7 {
+            background-image: radial-gradient(circle at top right, #ff5d8f, #725ac1);
+        }
+
+        .bg-level-8 {
+            background-image: radial-gradient(circle at top right, #ff4d6d, #5d3fd3);
+        }
+
+        .game-container {
+            background-color: #fff0f3;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 240, 243, 0.8);
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4f77;
+            background: linear-gradient(90deg, #ff4f77, #a37eff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .score-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .score-box {
+            background-color: rgba(255, 194, 209, 0.7);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #885a64;
+        }
+
+        .score-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #5a427d;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff4f77, #ff758c);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            box-shadow: 0 4px 6px rgba(255, 79, 119, 0.2);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #ff758c, #ff4f77);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 79, 119, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background-color: #ffc2d1;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+            height: 400px; /* 固定高度 */
+            border: 3px solid #ff94a9; /* 增强网格边框 */
+        }
+
+        .tile {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px; /* 调大数字字号 */
+            font-weight: bold;
+            transition: all 0.2s ease-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 2px rgba(255, 255, 255, 0.3); /* 增加立体感 */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            transform: scale(0.95);
+            will-change: transform, left, top;
+            background-image: url('https://www.transparenttextures.com/patterns/brick-wall.png'); /* 添加纹理 */
+        }
+
+        .tile-2 {
+            background-color: #ffd6e0;
+            color: #885a64;
+        }
+
+        .tile-4 {
+            background-color: #ffc2d1;
+            color: #7a4d56;
+        }
+
+        .tile-8 {
+            background-color: #ffb3c6;
+            color: #6b414a;
+        }
+
+        .tile-16 {
+            background-color: #ff94a9;
+            color: white;
+        }
+
+        .tile-32 {
+            background-color: #ff859b;
+            color: white;
+        }
+
+        .tile-64 {
+            background-color: #ff758c;
+            color: white;
+        }
+
+        .tile-128 {
+            background-color: #ffc8dd;
+            color: #805d6a;
+            font-size: 30px; /* 调大数字字号 */
+        }
+
+        .tile-256 {
+            background-color: #ffafcc;
+            color: #735360;
+            font-size: 30px; /* 调大数字字号 */
+        }
+
+        .tile-512 {
+            background-color: #ff9eb1;
+            color: white;
+            font-size: 28px; /* 调大数字字号 */
+        }
+
+        .tile-1024 {
+            background-color: #bde0fe;
+            color: #4a6fa5;
+            font-size: 26px; /* 调大数字字号 */
+        }
+
+        .tile-2048 {
+            background-color: #a2d2ff;
+            color: #39567d;
+            font-size: 26px; /* 调大数字字号 */
+        }
+
+        .tile-4096 {
+            background-color: #c8b6ff;
+            color: #5a427d;
+            font-size: 24px; /* 调大数字字号 */
+        }
+
+        .tile-8192 {
+            background-color: #bdb2ff;
+            color: #4a3566;
+            font-size: 24px; /* 调大数字字号 */
+        }
+
+        .tile-16384 {
+            background-color: #a2d2ff;
+            color: #39567d;
+            font-size: 22px; /* 调大数字字号 */
+        }
+
+        .tile-32768 {
+            background-color: #9381ff;
+            color: white;
+            font-size: 22px; /* 调大数字字号 */
+        }
+
+        .tile-65536 {
+            background-color: #8479e1;
+            color: white;
+            font-size: 20px; /* 调大数字字号 */
+        }
+
+        .tile-131072 {
+            background-color: #725ac1;
+            color: white;
+            font-size: 18px; /* 调大数字字号 */
+        }
+
+        .tile-move {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .tile-merge {
+            animation: merge 0.4s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes merge {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(0.95); }
+        }
+
+        .tile-new {
+            animation: pop 0.4s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.7); opacity: 0.7; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(0.95); opacity: 1; }
+        }
+
+        .tile-first-appear {
+            animation: firstAppear 0.8s ease-in-out;
+        }
+
+        @keyframes firstAppear {
+            0%, 100% { transform: scale(0.95); }
+            25% { transform: scale(1.15) rotate(-7deg); }
+            50% { transform: scale(1.2) rotate(7deg); }
+            75% { transform: scale(1.1) rotate(-4deg); }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #fff0f3, #ffe5ec);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff4f77, #a37eff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-message {
+            margin-bottom: 20px;
+            color: #5a427d;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            background: linear-gradient(135deg, #ff4f77, #ff758c);
+        }
+
+        .modal-buttons button:hover {
+            background: linear-gradient(135deg, #ff758c, #ff4f77);
+        }
+
+        .revive-btn {
+            background: linear-gradient(135deg, #a37eff, #bdb2ff) !important;
+        }
+
+        .revive-btn:hover {
+            background: linear-gradient(135deg, #bdb2ff, #a37eff) !important;
+        }
+
+        .danmaku {
+            position: absolute;
+            top: 20%;
+            left: -200px;
+            background: linear-gradient(90deg, rgba(255, 79, 119, 0.8), rgba(163, 126, 255, 0.8));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            white-space: nowrap;
+            z-index: 20;
+            animation: danmaku 5s linear forwards;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes danmaku {
+            0% { left: -200px; }
+            100% { left: calc(100% + 200px); }
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .sound-toggle:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sound-on::before {
+            content: '🔊';
+        }
+
+        .sound-off::before {
+            content: '🔇';
+        }
+
+        .particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: particleAnimation 1s ease-out forwards;
+        }
+
+        @keyframes particleAnimation {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+
+<body class="bg-level-1">
+    <div class="game-container">
+        <div class="header">
+            <div class="title">2048 - 流畅版</div>
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">当前分数</div>
+                    <div class="score-value" id="current-score">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">历史最高</div>
+                    <div class="score-value" id="best-score">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="restart-btn">重新开始</button>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <div id="sound-toggle" class="sound-toggle sound-on"></div>
+    </div>
+
+    <div class="overlay" id="game-over-modal">
+        <div class="modal">
+            <div class="modal-title">游戏结束!</div>
+            <div class="modal-message">
+                你的分数: <span id="final-score">0</span><br>
+                <span id="revive-text">你可以复活一次</span>
+            </div>
+            <div class="modal-buttons">
+                <button id="revive-btn" class="revive-btn">复活</button>
+                <button id="restart-modal-btn">重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="move-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-small-hit-in-a-game-2072.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="merge-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="record-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="gameover-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="revive-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-spell-swoosh-2297.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="clear-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 游戏状态变量
+        let board = Array(4).fill().map(() => Array(4).fill(0));
+        let score = 0;
+        let targetScore = 0;
+        let scoreAnimationId = null;
+        const scoreAnimationDuration = 1000; // 分数动画持续时间（毫秒）
+        const scoreSteps = 30; // 分数动画步数
+        let bestScore = localStorage.getItem('bestScore') || 0;
+        let canRevive = true;
+        let lastState = null;
+        let isMoving = false;
+        let isMusicEnabled = true;
+
+        let appearedNumbers = new Set();
+
+        // DOM 元素
+        const gridEl = document.getElementById('grid');
+        const currentScoreEl = document.getElementById('current-score');
+        const bestScoreEl = document.getElementById('best-score');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreEl = document.getElementById('final-score');
+        const reviveText = document.getElementById('revive-text');
+        const soundToggle = document.getElementById('sound-toggle');
+        const body = document.body;
+
+        // 音效元素
+        const moveSound = document.getElementById('move-sound');
+        const mergeSound = document.getElementById('merge-sound');
+        const recordSound = document.getElementById('record-sound');
+        const gameoverSound = document.getElementById('gameover-sound');
+        const reviveSound = document.getElementById('revive-sound');
+        const clearSound = document.getElementById('clear-sound');
+
+        // 游戏难度和状态跟踪
+        let lastScoreMilestone = 0;
+        let emptyCellCount = 0;
+        let criticalSurvivalCount = 0;
+
+        bestScoreEl.textContent = bestScore;
+
+        // 声音控制
+        soundToggle.addEventListener('click', () => {
+            isMusicEnabled = !isMusicEnabled;
+            soundToggle.className = isMusicEnabled ? 'sound-toggle sound-on' : 'sound-toggle sound-off';
+        });
+
+        function playSound(sound) {
+            if (isMusicEnabled) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('音频播放失败:', e));
+            }
+        }
+
+        // 更新分数显示，带平滑动画效果
+        function updateScores() {
+            // 如果目标分数和当前分数不同，则启动动画
+            if (targetScore !== score) {
+                cancelAnimationFrame(scoreAnimationId);
+                
+                const startScore = score;
+                const scoreDiff = targetScore - startScore;
+                let step = 0;
+                
+                const animateScore = () => {
+                    step++;
+                    if (step <= scoreSteps) {
+                        // 使用缓动函数使动画更自然
+                        const progress = easeOutCubic(step / scoreSteps);
+                        score = Math.floor(startScore + scoreDiff * progress);
+                        currentScoreEl.textContent = score;
+                        scoreAnimationId = requestAnimationFrame(animateScore);
+                    } else {
+                        // 确保最终值准确
+                        score = targetScore;
+                        currentScoreEl.textContent = score;
+                    }
+                };
+                
+                animateScore();
+            }
+            
+            // 更新最高分
+            if (targetScore > bestScore) {
+                bestScore = targetScore;
+                bestScoreEl.textContent = bestScore;
+                localStorage.setItem('bestScore', bestScore);
+                
+                // 新纪录特效
+                bestScoreEl.classList.add('new-record');
+                setTimeout(() => {
+                    bestScoreEl.classList.remove('new-record');
+                }, 1000);
+                
+                // 播放新纪录音效
+                playSound(recordSound);
+            }
+        }
+
+        // 缓动函数：三次方缓出
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        // 增加分数（带增量动画）
+        function addScore(points) {
+            targetScore += points;
+            updateScores();
+            
+            // 显示分数增加的动画效果
+            showScorePopup(points);
+        }
+
+        // 显示分数增加的弹出动画
+        function showScorePopup(points) {
+            const scorePopup = document.createElement('div');
+            scorePopup.className = 'score-popup';
+            scorePopup.textContent = '+' + points;
+            
+            // 定位到分数显示上方
+            const scoreBox = currentScoreEl.parentElement;
+            const rect = scoreBox.getBoundingClientRect();
+            const gridRect = gridEl.getBoundingClientRect();
+            
+            scorePopup.style.left = `${rect.left - gridRect.left + rect.width/2}px`;
+            scorePopup.style.top = `${rect.top - gridRect.top - 30}px`;
+            
+            gridEl.appendChild(scorePopup);
+            
+            // 执行动画
+            setTimeout(() => {
+                scorePopup.style.opacity = '0';
+                scorePopup.style.transform = 'translateY(-20px)';
+                
+                setTimeout(() => {
+                    gridEl.removeChild(scorePopup);
+                }, 500);
+            }, 10);
+        }
+
+        // 初始化游戏
+        function init() {
+            // 重置分数
+            score = 0;
+            targetScore = 0;
+            currentScoreEl.textContent = score;
+            
+            // 重置游戏状态
+            board = Array(4).fill().map(() => Array(4).fill(0));
+            canRevive = true;
+            lastState = null;
+            appearedNumbers = new Set([2, 4]);
+            lastScoreMilestone = 0;
+            emptyCellCount = 0;
+            criticalSurvivalCount = 0;
+            updateBackgroundColor();
+            addTile();
+            addTile();
+            render();
+        }
+
+        // 添加新方块
+        function addTile() {
+            const emptyCells = [];
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] === 0) emptyCells.push([i, j]);
+                }
+            }
+
+            emptyCellCount = emptyCells.length;
+
+            if (emptyCells.length > 0) {
+                const [x, y] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                board[x][y] = Math.random() < 0.9 ? 2 : 4;
+
+                setTimeout(() => {
+                    render();
+                    const tiles = gridEl.querySelectorAll('.tile');
+                    const index = x * 4 + y;
+                    if (tiles[index]) {
+                        tiles[index].classList.add('tile-new');
+                    }
+
+                    checkCriticalSurvival();
+                }, 100);
+            }
+        }
+
+        // 渲染游戏界面
+        function render() {
+            // 清空网格
+            gridEl.innerHTML = '';
+            
+            // 获取网格尺寸
+            const gridRect = gridEl.getBoundingClientRect();
+            const cellSize = (gridRect.width - 30) / 4; // 减去间隙
+            
+            // 创建所有方块
+            board.forEach((row, rowIndex) => {
+                row.forEach((val, colIndex) => {
+                    if (val !== 0) {
+                        const tile = document.createElement('div');
+                        const tileClass = val ? `tile-${val}` : '';
+                        tile.className = `tile ${tileClass}`;
+                        tile.textContent = val || '';
+                        
+                        // 设置位置和大小
+                        tile.style.left = `${colIndex * (cellSize + 10)}px`;
+                        tile.style.top = `${rowIndex * (cellSize + 10)}px`;
+                        tile.style.width = `${cellSize}px`;
+                        tile.style.height = `${cellSize}px`;
+                        
+                        // 记录原始位置
+                        tile.dataset.row = rowIndex;
+                        tile.dataset.col = colIndex;
+                        
+                        // 首次出现的数字特殊动画
+                        if (recentlyAppearedNumbers.has(val)) {
+                            tile.classList.add('tile-first-appear');
+                        }
+                        
+                        gridEl.appendChild(tile);
+                    }
+                });
+            });
+            
+            updateScores();
+        }
+
+        let recentlyAppearedNumbers = new Set();
+
+        // 移动方块
+        function move(direction) {
+            if (isMoving || isGameOver()) return;
+            isMoving = true;
+            recentlyAppearedNumbers.clear();
+
+            const prevBoard = JSON.parse(JSON.stringify(board));
+            let moved = false;
+            let mergedPositions = new Set();
+            let hasMerge = false;
+
+            function merge(line) {
+                let newLine = line.filter(n => n !== 0);
+                for (let i = 0; i < newLine.length - 1; i++) {
+                    if (newLine[i] === newLine[i + 1] && !mergedPositions.has(i)) {
+                        const mergedValue = newLine[i] * 2;
+                        newLine[i] = mergedValue;
+                        newLine.splice(i + 1, 1);
+                        mergedPositions.add(i);
+                        moved = true;
+                        hasMerge = true;
+
+                        // 增加分数
+                        addScore(mergedValue);
+
+                        if (!appearedNumbers.has(mergedValue)) {
+                            appearedNumbers.add(mergedValue);
+                            recentlyAppearedNumbers.add(mergedValue);
+                        }
+                    }
+                }
+                while (newLine.length < 4) newLine.push(0);
+                return newLine;
+            }
+
+            switch (direction) {
+                case 'left':
+                    board = board.map(row => merge(row));
+                    break;
+                case 'right':
+                    board = board.map(row => merge(row.reverse()).reverse());
+                    break;
+                case 'up':
+                    const transposedUp = transpose(board);
+                    board = transpose(transposedUp.map(col => merge(col)));
+                    break;
+                case 'down':
+                    const transposedDown = transpose(board);
+                    board = transpose(transposedDown.map(col => merge(col.reverse()).reverse()));
+                    break;
+            }
+
+            if (JSON.stringify(board) !== JSON.stringify(prevBoard)) {
+                lastState = {
+                    board: JSON.parse(JSON.stringify(prevBoard)),
+                    score: score
+                };
+
+                // 根据是否有数字融合播放不同音效
+                playSound(hasMerge ? mergeSound : moveSound);
+
+                animateMove(prevBoard, () => {
+                    addTile();
+                    render();
+                    isMoving = false;
+
+                    checkScoreMilestones();
+
+                    if (score > bestScore) {
+                        showDanmaku("宝宝太牛了！");
+                    }
+
+                    if (recentlyAppearedNumbers.size > 0) {
+                        recentlyAppearedNumbers.forEach(num => {
+                            showDanmaku(`首次合成 ${num}！`);
+                        });
+                    }
+
+                    if (isGameOver()) {
+                        playSound(gameoverSound);
+                        showGameOver();
+                    }
+                });
+
+                if (hasMerge) {
+                    createParticlesForMerges(prevBoard);
+                }
+            } else {
+                isMoving = false;
+            }
+        }
+
+        // 转置矩阵
+        function transpose(matrix) {
+            return matrix[0].map((_, col) => matrix.map(row => row[col]));
+        }
+
+        // 动画移动效果
+        function animateMove(prevBoard, callback) {
+            const tiles = gridEl.querySelectorAll('.tile');
+            const gridRect = gridEl.getBoundingClientRect();
+            const cellSize = (gridRect.width - 30) / 4; // 减去间隙
+            const animations = [];
+            
+            // 清空现有动画类
+            tiles.forEach(tile => {
+                tile.classList.remove('tile-move', 'tile-merge');
+            });
+            
+            // 收集所有需要移动和合并的方块
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const prevValue = prevBoard[i][j];
+                    const currentValue = board[i][j];
+                    
+                    if (prevValue !== 0) {
+                        // 找到这个方块在新状态中的位置
+                        let targetRow = i;
+                        let targetCol = j;
+                        let isMerge = false;
+                        
+                        // 确定目标位置和是否合并
+                        if (direction === 'left') {
+                            // 向左移动，找到最左可到达位置
+                            targetCol = j;
+                            while (targetCol > 0 && prevBoard[i][targetCol - 1] === 0) {
+                                targetCol--;
+                            }
+                            // 检查是否可以合并
+                            if (targetCol > 0 && prevBoard[i][targetCol - 1] === prevValue) {
+                                targetCol--;
+                                isMerge = true;
+                            }
+                        } else if (direction === 'right') {
+                            // 向右移动，找到最右可到达位置
+                            targetCol = j;
+                            while (targetCol < 3 && prevBoard[i][targetCol + 1] === 0) {
+                                targetCol++;
+                            }
+                            // 检查是否可以合并
+                            if (targetCol < 3 && prevBoard[i][targetCol + 1] === prevValue) {
+                                targetCol++;
+                                isMerge = true;
+                            }
+                        } else if (direction === 'up') {
+                            // 向上移动，找到最上可到达位置
+                            targetRow = i;
+                            while (targetRow > 0 && prevBoard[targetRow - 1][j] === 0) {
+                                targetRow--;
+                            }
+                            // 检查是否可以合并
+                            if (targetRow > 0 && prevBoard[targetRow - 1][j] === prevValue) {
+                                targetRow--;
+                                isMerge = true;
+                            }
+                        } else if (direction === 'down') {
+                            // 向下移动，找到最下可到达位置
+                            targetRow = i;
+                            while (targetRow < 3 && prevBoard[targetRow + 1][j] === 0) {
+                                targetRow++;
+                            }
+                            // 检查是否可以合并
+                            if (targetRow < 3 && prevBoard[targetRow + 1][j] === prevValue) {
+                                targetRow++;
+                                isMerge = true;
+                            }
+                        }
+                        
+                        // 找到对应的DOM元素
+                        const tile = gridEl.querySelector(`.tile[data-row="${i}"][data-col="${j}"]`);
+                        if (tile) {
+                            animations.push({
+                                tile,
+                                from: { row: i, col: j },
+                                to: { row: targetRow, col: targetCol },
+                                isMerge
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // 执行所有移动动画
+            animations.forEach(({ tile, from, to, isMerge }) => {
+                // 设置初始位置
+                tile.style.left = `${from.col * (cellSize + 10)}px`;
+                tile.style.top = `${from.row * (cellSize + 10)}px`;
+                
+                // 添加移动类
+                tile.classList.add('tile-move');
+                
+                // 使用requestAnimationFrame确保样式已应用
+                requestAnimationFrame(() => {
+                    // 设置目标位置
+                    tile.style.left = `${to.col * (cellSize + 10)}px`;
+                    tile.style.top = `${to.row * (cellSize + 10)}px`;
+                    
+                    // 如果是合并，添加合并动画
+                    if (isMerge) {
+                        setTimeout(() => {
+                            tile.classList.add('tile-merge');
+                        }, 150);
+                    }
+                });
+            });
+            
+            // 等待所有动画完成后执行回调
+            setTimeout(callback, 350);
+        }
+
+        // 检查游戏是否结束
+        function isGameOver() {
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] === 0) return false;
+                }
+            }
+
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const current = board[i][j];
+                    if (j < 3 && board[i][j + 1] === current) return false;
+                    if (i < 3 && board[i + 1][j] === current) return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 显示游戏结束界面
+        function showGameOver() {
+            finalScoreEl.textContent = score;
+
+            if (canRevive) {
+                reviveText.textContent = "你可以复活一次";
+                document.getElementById('revive-btn').style.display = 'block';
+            } else {
+                reviveText.textContent = "你已使用过复活机会";
+                document.getElementById('revive-btn').style.display = 'none';
+            }
+
+            gameOverModal.classList.add('active');
+        }
+
+        // 复活功能
+        function revive() {
+            if (canRevive) {
+                canRevive = false;
+                gameOverModal.classList.remove('active');
+
+                const clearPositions = [];
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (board[i][j] <= 8) {
+                            clearPositions.push({ row: i, col: j });
+                            board[i][j] = 0;
+                        }
+                    }
+                }
+
+                playSound(reviveSound);
+
+                render();
+                const tiles = gridEl.querySelectorAll('.tile');
+                clearPositions.forEach(pos => {
+                    const index = pos.row * 4 + pos.col;
+                    if (tiles[index]) {
+                        tiles[index].classList.add('tile-clear');
+                    }
+                });
+
+                setTimeout(() => {
+                    addTile();
+                    render();
+
+                    if (isGameOver()) {
+                        playSound(gameoverSound);
+                        showGameOver();
+                    }
+                }, 500);
+            }
+        }
+
+        // 显示弹幕
+        function showDanmaku(text) {
+            const danmaku = document.createElement('div');
+            danmaku.className = 'danmaku';
+            danmaku.textContent = text;
+
+            const topPos = 20 + Math.random() * 30;
+            danmaku.style.top = `${topPos}%`;
+
+            document.body.appendChild(danmaku);
+
+            setTimeout(() => {
+                danmaku.remove();
+            }, 5000);
+        }
+
+        // 更新背景颜色
+        function updateBackgroundColor() {
+            const level = Math.min(8, Math.floor(score / 1000) + 1);
+            body.className = `bg-level-${level}`;
+        }
+
+        // 检查分数里程碑
+        function checkScoreMilestones() {
+            const currentMilestone = Math.floor(score / 1000);
+            if (currentMilestone > lastScoreMilestone) {
+                showDanmaku(`达成 ${currentMilestone * 1000} 分！`);
+                lastScoreMilestone = currentMilestone;
+            }
+            updateBackgroundColor();
+        }
+
+        // 检查临界生存状态
+        function checkCriticalSurvival() {
+            if (emptyCellCount === 1) {
+                criticalSurvivalCount++;
+
+                if (criticalSurvivalCount === 5) {
+                    showDanmaku("绝地逢生，厉害啊！");
+                    criticalSurvivalCount = 0;
+                }
+            } else {
+                criticalSurvivalCount = 0;
+            }
+        }
+
+        // 创建合并特效粒子
+        function createParticlesContainer() {
+            let container = document.querySelector('.particles-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'particles-container';
+                gridEl.appendChild(container);
+            }
+            return container;
+        }
+
+        function createParticlesForMerges(prevBoard) {
+            const container = createParticlesContainer();
+
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (prevBoard[i][j] !== 0 && board[i][j] > prevBoard[i][j]) {
+                        const tile = gridEl.querySelector(`.tile[data-row="${i}"][data-col="${j}"]`);
+                        if (tile) {
+                            const { top, left, width, height } = tile.getBoundingClientRect();
+                            const gridRect = gridEl.getBoundingClientRect();
+                            const centerX = left + width / 2 - gridRect.left;
+                            const centerY = top + height / 2 - gridRect.top;
+                            const tileColor = getComputedStyle(tile).backgroundColor;
+
+                            for (let k = 0; k < 15; k++) {
+                                const particle = document.createElement('div');
+                                particle.className = 'particle';
+
+                                const angle = Math.random() * 2 * Math.PI;
+                                const distance = (0.3 + Math.random() * 0.5) * Math.min(width, height) / 2;
+
+                                const targetX = centerX + distance * Math.cos(angle);
+                                const targetY = centerY + distance * Math.sin(angle);
+
+                                particle.style.left = `${centerX}px`;
+                                particle.style.top = `${centerY}px`;
+                                particle.style.backgroundColor = tileColor;
+
+                                container.appendChild(particle);
+
+                                requestAnimationFrame(() => {
+                                    particle.style.left = `${targetX}px`;
+                                    particle.style.top = `${targetY}px`;
+
+                                    setTimeout(() => {
+                                        if (container.contains(particle)) {
+                                            container.removeChild(particle);
+                                        }
+                                    }, 1000);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            const keyMap = {
+                37: 'left', 38: 'up', 39: 'right', 40: 'down'
+            };
+            if (keyMap[e.keyCode]) {
+                direction = keyMap[e.keyCode];
+                move(direction);
+            }
+        });
+
+        // 触摸控制
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (!touchStartX) return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+
+            if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    direction = dx > 0 ? 'right' : 'left';
+                    move(direction);
+                } else {
+                    direction = dy > 0 ? 'down' : 'up';
+                    move(direction);
+                }
+            }
+
+            touchStartX = 0;
+            touchStartY = 0;
+        }, { passive: true });
+
+        // 按钮事件
+        document.getElementById('restart-btn').addEventListener('click', init);
+        document.getElementById('restart-modal-btn').addEventListener('click', () => {
+            gameOverModal.classList.remove('active');
+            init();
+        });
+        document.getElementById('revive-btn').addEventListener('click', revive);
+
+        // 初始化游戏
+        let direction = '';
+        init();
+    </script>
+</body>
+
+</html>    
